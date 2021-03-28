@@ -81,10 +81,10 @@ creative_commons:
 # External url should start with http:// or https://
 menu:
   home: / || fa fa-home
-  操作系统: ""
-  数据结构与算法: ""
-  kubernetes: ""
-  喜欢的电影: ""
+  # 操作系统: ""
+  # 数据结构与算法: ""
+  kubernetes: /kubernetes
+  # 喜欢的电影: ""
   about: /about/ || fa fa-user
   #tags: /tags/ || fa fa-tags
   #categories: /categories/ || fa fa-th
