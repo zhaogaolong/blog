@@ -593,7 +593,7 @@
   "resolved" "https://registry.npmjs.org/hexo-theme-next/-/hexo-theme-next-8.2.2.tgz"
   "version" "8.2.2"
 
-"hexo-util@^2.0.0", "hexo-util@^2.1.0", "hexo-util@^2.4.0":
+"hexo-util@^2.0.0", "hexo-util@^2.1.0", "hexo-util@^2.4.0", "hexo-util@2.4.0":
   "integrity" "sha512-IPQvAyn0cznYMU2gskMiZ6LZEvN7wHNusrJoYxrir4f7S7POpZeDTBswiko9R1qqd+/hu07wUYZdm4ceTTCEaA=="
   "resolved" "https://registry.npmjs.org/hexo-util/-/hexo-util-2.4.0.tgz"
   "version" "2.4.0"
@@ -607,6 +607,13 @@
     "prismjs" "^1.17.1"
     "strip-indent" "^3.0.0"
     "striptags" "^3.1.1"
+
+"hexo-word-counter@^0.0.3":
+  "integrity" "sha512-VImhZ9m2RFoGDwKCkfNodogHgGmN7JLa1OZQ/N9gW0SpZDyOwP4jKAlWplzbAVdwK/CF3VQfKEeDzfsTbjcKTQ=="
+  "resolved" "https://registry.npmjs.org/hexo-word-counter/-/hexo-word-counter-0.0.3.tgz"
+  "version" "0.0.3"
+  dependencies:
+    "hexo-util" "2.4.0"
 
 "hexo@^5.0.0":
   "integrity" "sha512-4vMDle5GjpMeOVrx0NKoTZCqrmpJVg3wNiNNUVjcoFfcpYcMzQUCZHBtQqLl7BzjJ8x2gs002VQ5yv0ZKtj8Jg=="
