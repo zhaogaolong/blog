@@ -5,11 +5,17 @@ tags:
 - kubernetes
 - configmap
 
+categories: kubernetes
+
 ---
+
+
 
 > 原文 https://medium.com/hackernoon/mount-file-to-kubernetes-pod-without-deleting-the-existing-file-in-the-docker-container-in-the-88b5d11661a6
 
 当我试图将 congfigmap 挂载到 kubernetes pod 的已存在的的目录里
+
+<!--more-->
 
 ## 概述
 
