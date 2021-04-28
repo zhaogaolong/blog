@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"zhaogaolong.github.io","root":"/","images":"/images","scheme":"Muse","version":"8.2.2","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+<meta name="description" content="如何瘦身 docker image">
+<meta property="og:type" content="article">
+<meta property="og:title" content="docker image 的瘦身">
+<meta property="og:url" content="https://zhaogaolong.github.io/2021/04/25/docker-image-smaller/index.html">
+<meta property="og:site_name" content="赵高龙的学习笔记">
+<meta property="og:description" content="如何瘦身 docker image">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-04-25T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-04-28T12:08:25.052Z">
+<meta property="article:author" content="Zhaogaolong">
+<meta property="article:tag" content="docker">
+<meta property="article:tag" content="kubernetes">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://zhaogaolong.github.io/2021/04/25/docker-image-smaller/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+<title>docker image 的瘦身 | 赵高龙的学习笔记</title>
+  
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">赵高龙的学习笔记</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section">Home</a></li>
+        <li class="menu-item menu-item-docker"><a href="/categories/docker/" rel="section">docker</a></li>
+        <li class="menu-item menu-item-kubernetes"><a href="/categories/kubernetes" rel="section">kubernetes</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section">About</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%8E%B0%E7%8A%B6"><span class="nav-number">1.</span> <span class="nav-text">现状</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%95%9C%E5%83%8F%E7%98%A6%E8%BA%AB%E4%B8%89%E6%9D%BF%E6%96%A7"><span class="nav-number">2.</span> <span class="nav-text">镜像瘦身三板斧</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4%E5%90%88%E5%B9%B6"><span class="nav-number">2.1.</span> <span class="nav-text">命令合并</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%A7%E5%87%BA%E8%BD%AC%E7%A7%BB%EF%BC%88copy-from%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">产出转移（copy from）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#squash-merge-layer"><span class="nav-number">2.3.</span> <span class="nav-text">squash merge layer</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Zhaogaolong</p>
+  <div class="site-description" itemprop="description">记录时间</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://zhaogaolong.github.io/2021/04/25/docker-image-smaller/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Zhaogaolong">
+      <meta itemprop="description" content="记录时间">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="赵高龙的学习笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          docker image 的瘦身
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-04-25 00:00:00" itemprop="dateCreated datePublished" datetime="2021-04-25T00:00:00+00:00">2021-04-25</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2021-04-28 12:08:25" itemprop="dateModified" datetime="2021-04-28T12:08:25+00:00">2021-04-28</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/docker/" itemprop="url" rel="index"><span itemprop="name">docker</span></a>
+        </span>
+    </span>
+
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="Symbols count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Symbols count in article: </span>
+      <span>9.6k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>9 mins.</span>
+    </span>
+</div>
+
+            <div class="post-description">如何瘦身 docker image</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>随着容器化的不断普及，镜像作为容器的基础也是受到了指数型增长，之前有一段时间在搞 docker hub，对镜像瘦身有些许心得，分享给大家。</p>
+<h1 id="现状"><a href="#现状" class="headerlink" title="现状"></a>现状</h1><p>随着 ci/cd 的自动化，越来越多的不是那么优雅的镜像构建全部存储到 docker hub 里，一个镜像的 layer 数量从十几层到几十层不等，中间层出现大量垃圾数据，带来很多负面影响和问题。</p>
+<p>举个例子</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> centos:centos7.<span class="number">6.1810</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> yum makecache</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> yum install vim net-tools dstat htop -y</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> yum clean all</span></span><br></pre></td></tr></table></figure>
+
+<p>执行构建</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">$ docker build -f Dockerfile -t zhaogaolong/centos-tools:v1 .</span><br><span class="line">Sending build context to Docker daemon  2.048kB</span><br><span class="line">Step 1/4 : FROM centos:centos7.6.1810</span><br><span class="line"> ---&gt; f1cb7c7d58b7</span><br><span class="line">Step 2/4 : RUN yum makecache</span><br><span class="line"> ---&gt; Using cache</span><br><span class="line"> ---&gt; a9bebba7b06e</span><br><span class="line">Step 3/4 : RUN yum install vim net-tools dstat htop -y -q</span><br><span class="line"> ---&gt; Running <span class="keyword">in</span> 162917d77b35</span><br><span class="line">warning: /var/cache/yum/x86_64/7/base/packages/gpm-libs-1.20.7-6.el7.x86_64.rpm: Header V3 RSA/SHA256 Signature, key ID f4a80eb5: NOKEY</span><br><span class="line">Public key <span class="keyword">for</span> gpm-libs-1.20.7-6.el7.x86_64.rpm is not installed</span><br><span class="line">Public key <span class="keyword">for</span> perl-Pod-Escapes-1.04-299.el7_9.noarch.rpm is not installed</span><br><span class="line">Importing GPG key 0xF4A80EB5:</span><br><span class="line"> Userid     : <span class="string">&quot;CentOS-7 Key (CentOS 7 Official Signing Key) &lt;security@centos.org&gt;&quot;</span></span><br><span class="line"> Fingerprint: 6341 ab27 53d7 8a78 a7c2 7bb1 24c6 a8a7 f4a8 0eb5</span><br><span class="line"> Package    : centos-release-7-6.1810.2.el7.centos.x86_64 (@CentOS)</span><br><span class="line"> From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7</span><br><span class="line">install-info: No such file or directory <span class="keyword">for</span> /usr/share/info/which.info.gz</span><br><span class="line">Removing intermediate container 162917d77b35</span><br><span class="line"> ---&gt; c866064ab1b2</span><br><span class="line">Step 4/4 : RUN yum clean all</span><br><span class="line"> ---&gt; Running <span class="keyword">in</span> 17aaa7f6e6cb</span><br><span class="line">Loaded plugins: fastestmirror, ovl</span><br><span class="line">Cleaning repos: base extras updates</span><br><span class="line">Cleaning up list of fastest mirrors</span><br><span class="line">Removing intermediate container 17aaa7f6e6cb</span><br><span class="line"> ---&gt; a5181d724237</span><br><span class="line">Successfully built a5181d724237</span><br><span class="line">Successfully tagged zhaogaolong/centos-tools:v2</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>前后对比一下</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 基础镜像</span></span><br><span class="line">$ docker image ls centos:centos7.6.1810</span><br><span class="line">REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">centos              centos7.6.1810      f1cb7c7d58b7        2 years ago         202MB</span><br><span class="line"></span><br><span class="line">➜ docker image  ls zhaogaolong/centos-tools:v1</span><br><span class="line">REPOSITORY                 TAG                 IMAGE ID            CREATED              SIZE</span><br><span class="line">zhaogaolong/centos-tools   v2                  a5181d724237        About a minute ago   633MB</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">➜ docker image <span class="built_in">history</span> zhaogaolong/centos-tools:v1</span><br><span class="line">IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT</span><br><span class="line">a5181d724237        4 minutes ago       /bin/sh -c yum clean all                        23.3MB</span><br><span class="line">c866064ab1b2        4 minutes ago       /bin/sh -c yum install vim net-tools dstat h…   167MB</span><br><span class="line">a9bebba7b06e        7 minutes ago       /bin/sh -c yum makecache                        242MB</span><br><span class="line">f1cb7c7d58b7        2 years ago         /bin/sh -c <span class="comment">#(nop)  CMD [&quot;/bin/bash&quot;]            0B</span></span><br><span class="line">&lt;missing&gt;           2 years ago         /bin/sh -c <span class="comment">#(nop)  LABEL org.label-schema.sc…   0B</span></span><br><span class="line">&lt;missing&gt;           2 years ago         /bin/sh -c <span class="comment">#(nop) ADD file:54b004357379717df…   202MB</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>负面影响：</p>
+<ol>
+<li>占用存储空间， 不光占用 docker hub 的空间，还占用容器启动的服务器的存储空间，容器启动量大后成指数型增长。</li>
+<li>镜像拉去效率下降。比如我们后端使用 vmware 开源的 harbor 来管理 docker image。服务器的 docker pull 镜像的时候首先过去一个 token ，然后用这个 token 拉去镜像，而 token 过期时间只有 300s，如果有过多的垃圾 layer + 恶劣的网络环境，导致镜像拉去效率直线下降。</li>
+<li>容器 io 性能下降（待确认）。</li>
+</ol>
+<h1 id="镜像瘦身三板斧"><a href="#镜像瘦身三板斧" class="headerlink" title="镜像瘦身三板斧"></a>镜像瘦身三板斧</h1><ol>
+<li>命令合并</li>
+<li>产出转义</li>
+<li>合并数据</li>
+</ol>
+<h2 id="命令合并"><a href="#命令合并" class="headerlink" title="命令合并"></a>命令合并</h2><figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> centos:centos7.<span class="number">6.1810</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> yum makecache &amp;&amp; yum install vim net-tools dstat htop -y &amp;&amp; yum clean all</span></span><br></pre></td></tr></table></figure>
+
+<p>重新执行 docker build</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ docker image ls centos:centos7.6.1810</span><br><span class="line">REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">centos              centos7.6.1810      f1cb7c7d58b7        2 years ago         202MB</span><br><span class="line">$ docker image ls zhaogaolong/centos-tools:v2</span><br><span class="line">REPOSITORY                 TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">zhaogaolong/centos-tools   v2                  54026c4cd698        2 minutes ago       282MB</span><br><span class="line"></span><br><span class="line">$ docker image <span class="built_in">history</span> zhaogaolong/centos-tools:v2</span><br><span class="line">IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT</span><br><span class="line">54026c4cd698        3 minutes ago       /bin/sh -c yum makecache &amp;&amp; yum install vim …   80.1MB</span><br><span class="line">f1cb7c7d58b7        2 years ago         /bin/sh -c <span class="comment">#(nop)  CMD [&quot;/bin/bash&quot;]            0B</span></span><br><span class="line">&lt;missing&gt;           2 years ago         /bin/sh -c <span class="comment">#(nop)  LABEL org.label-schema.sc…   0B</span></span><br><span class="line">&lt;missing&gt;           2 years ago         /bin/sh -c <span class="comment">#(nop) ADD file:54b004357379717df…   202MB</span></span><br></pre></td></tr></table></figure>
+
+<p>咦， 竟然只增加了 80m ，比之前构建的镜像 633MB 节省了 351MB。 确实很有效。</p>
+<p>有的时候需要应用在做编译的时候，需要先安装好环境，然后执行编译，没法一步完成。</p>
+<p>例如下面的例子</p>
+<blockquote>
+<p><a target="_blank" rel="noopener" href="https://github.com/zhaogaolong/latency">https://github.com/zhaogaolong/latency</a></p>
+</blockquote>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> golang:<span class="number">1.15</span>.<span class="number">6</span>-buster as builder</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /workspace</span></span><br><span class="line"><span class="keyword">ENV</span> GOPROXY https://goproxy.io,direct</span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> . .</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> go mod vendor -v &amp;&amp; CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o server main.go</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ docker build -f Dockerfile -t zhaogaolong/latency:v1 . --no-cache</span><br><span class="line">$ docker image ls golang:1.15.6-buster</span><br><span class="line">REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">golang              1.15.6-buster       5f46b413e8f5        3 months ago        839MB</span><br><span class="line"></span><br><span class="line">$ docker image ls zhaogaolong/latency:v1</span><br><span class="line">REPOSITORY            TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">zhaogaolong/latency   v1                  141807be4b7a        11 minutes ago      890MB</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>镜像竟然高达 890MB，基础镜像就高达 839MB，我们继续往下分析。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">$ docker image history zhaogaolong&#x2F;latency:v1</span><br><span class="line">IMAGE CREATED CREATED BY SIZE COMMENT</span><br><span class="line">141807be4b7a 23 seconds ago &#x2F;bin&#x2F;sh -c go mod vendor -v &amp;&amp; CGO_ENABLED&#x3D;0… 44.4MB</span><br><span class="line">dfddf35c7b12 56 seconds ago &#x2F;bin&#x2F;sh -c #(nop) COPY dir:a26e918edfe2912b5… 6.55MB</span><br><span class="line">cd7a6e1187ed 56 seconds ago &#x2F;bin&#x2F;sh -c #(nop) ENV GOPROXY&#x3D;https:&#x2F;&#x2F;gopro… 0B</span><br><span class="line">5d5abce40a7a 57 seconds ago &#x2F;bin&#x2F;sh -c #(nop) WORKDIR &#x2F;workspace 0B</span><br><span class="line">5f46b413e8f5 3 months ago &#x2F;bin&#x2F;sh -c #(nop) WORKDIR &#x2F;go 0B</span><br><span class="line">&lt;missing&gt; 3 months ago &#x2F;bin&#x2F;sh -c mkdir -p &quot;$GOPATH&#x2F;src&quot; &quot;$GOPATH&#x2F;b… 0B</span><br><span class="line">&lt;missing&gt; 3 months ago &#x2F;bin&#x2F;sh -c #(nop) ENV PATH&#x3D;&#x2F;go&#x2F;bin:&#x2F;usr&#x2F;loc… 0B</span><br><span class="line">&lt;missing&gt; 3 months ago &#x2F;bin&#x2F;sh -c #(nop) ENV GOPATH&#x3D;&#x2F;go 0B</span><br><span class="line">&lt;missing&gt; 3 months ago &#x2F;bin&#x2F;sh -c set -eux; dpkgArch&#x3D;&quot;$(dpkg --pr… 363MB</span><br><span class="line">&lt;missing&gt; 3 months ago &#x2F;bin&#x2F;sh -c #(nop) ENV GOLANG_VERSION&#x3D;1.15.6 0B</span><br><span class="line">&lt;missing&gt; 3 months ago &#x2F;bin&#x2F;sh -c #(nop) ENV PATH&#x3D;&#x2F;usr&#x2F;local&#x2F;go&#x2F;bi… 0B</span><br><span class="line">&lt;missing&gt; 3 months ago &#x2F;bin&#x2F;sh -c apt-get update &amp;&amp; apt-get install… 182MB</span><br><span class="line">&lt;missing&gt; 3 months ago &#x2F;bin&#x2F;sh -c apt-get update &amp;&amp; apt-get install… 146MB</span><br><span class="line">&lt;missing&gt; 3 months ago &#x2F;bin&#x2F;sh -c set -ex; if ! command -v gpg &gt; &#x2F;… 17.5MB</span><br><span class="line">&lt;missing&gt; 3 months ago &#x2F;bin&#x2F;sh -c set -eux; apt-get update; apt-g… 16.5MB</span><br><span class="line">&lt;missing&gt; 3 months ago &#x2F;bin&#x2F;sh -c #(nop) CMD [&quot;bash&quot;] 0B</span><br><span class="line">&lt;missing&gt; 3 months ago &#x2F;bin&#x2F;sh -c #(nop) ADD file:53e587afdbeaee60c… 114MB</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>最上面层 layer 是无法合并的，因为使用了 dockerfile 的不同关键字，一个是 <code>COPY</code> 和 <code>RUN</code>。</p>
+<p>想法：如果可以把二进制包 copy 到另外一个全新的环境中运行，而废弃构建的镜像。确实可以通过 <code>copy from</code> 的解决方案解决。</p>
+<h2 id="产出转移（copy-from）"><a href="#产出转移（copy-from）" class="headerlink" title="产出转移（copy from）"></a>产出转移（copy from）</h2><p><code>COPY FROM</code> 是可以在构建的的过程中从临时镜像把产出（artifact）copy 到另外一个镜像里，我成前一个镜像为 build 镜像，后者为 release 镜像。</p>
+<p>docker file 稍微修改一下</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> golang:<span class="number">1.15</span>.<span class="number">6</span>-buster as builder</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /workspace</span></span><br><span class="line"><span class="keyword">ENV</span> GOPROXY https://goproxy.io,direct</span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> . .</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> go mod vendor -v</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o server main.go</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># add release docker image</span></span><br><span class="line"><span class="keyword">FROM</span> centos:<span class="number">7.9</span>.<span class="number">2009</span> as runtime</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /</span></span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> --from=builder /workspace/server /server</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="bash"> [<span class="string">&quot;bash&quot;</span>, <span class="string">&quot;-c&quot;</span>, <span class="string">&quot;/server&quot;</span>]</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$  docker build -f Dockerfile -t zhaogaolong/latency:v2 . --no-cache</span><br><span class="line"></span><br><span class="line">$ docker image ls zhaogaolong/latency</span><br><span class="line">REPOSITORY            TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">REPOSITORY            TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">zhaogaolong/latency   v2                  d0bed0af30d7        7 minutes ago       210MB</span><br><span class="line">zhaogaolong/latency   v1                  141807be4b7a        17 minutes ago      890MB</span><br></pre></td></tr></table></figure>
+
+<p>咦，不错，直接从 890MB 降到了 210MB 了，还是比较可观的。</p>
+<p>突然有一个天，需求有变，需要在在运行的镜像里安装软件环境，因为我们的 app 有系统调用。 咦，有办法，我们把前两个方法一起不就好咯。</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> golang:<span class="number">1.15</span>.<span class="number">6</span>-buster as builder</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /workspace</span></span><br><span class="line"><span class="keyword">ENV</span> GOPROXY https://goproxy.io,direct</span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> . .</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> go mod vendor -v</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o server main.go</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">FROM</span> centos:<span class="number">7.9</span>.<span class="number">2009</span> as runtime</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> yum makecache &amp;&amp; yum install iproute -y -q &amp;&amp; yum clean all <span class="comment"># install iproute</span></span></span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> --from=builder /workspace/server /server</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="bash"> [<span class="string">&quot;bash&quot;</span>, <span class="string">&quot;-c&quot;</span>, <span class="string">&quot;/server&quot;</span>]</span></span><br></pre></td></tr></table></figure>
+
+<p>开始执行构建</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> docker build -f Dockerfile -t zhaogaolong/latency:v3 . --no-cache</span></span><br><span class="line"><span class="meta">$</span><span class="bash"> docker image ls zhaogaolong/latency</span></span><br><span class="line">REPOSITORY            TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">zhaogaolong/latency   v3                  12eb5e19b424        25 seconds ago      238MB</span><br><span class="line">zhaogaolong/latency   v2                  d0bed0af30d7        17 minutes ago      210MB</span><br><span class="line">zhaogaolong/latency   v1                  141807be4b7a        27 minutes ago      890MB</span><br></pre></td></tr></table></figure>
+
+<p>v3 版本只增加了安装软件的大小。感觉棒棒哒。</p>
+<p>突然有一天来一个偏痴狂，对代码可读性提出了更高的要求，无法容忍 shell 命令 通过 &amp;&amp; 相连。</p>
+<blockquote>
+<p>《只有偏执狂才能生存》 – 英特尔的安迪·格鲁夫</p>
+</blockquote>
+<h2 id="squash-merge-layer"><a href="#squash-merge-layer" class="headerlink" title="squash merge layer"></a>squash merge layer</h2><p>还有一个神器，可以把整个 docker build 的过程的 layer 全部合并起来。 它就是 squash</p>
+<p>install from <a target="_blank" rel="noopener" href="https://pypi.org/project/docker-squash/">https://pypi.org/project/docker-squash/</a></p>
+<p>按照偏痴狂的要求，对代码可读性进行了调整</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> golang:<span class="number">1.15</span>.<span class="number">6</span>-buster as builder</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /workspace</span></span><br><span class="line"><span class="keyword">ENV</span> GOPROXY https://goproxy.io,direct</span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> . .</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> go mod vendor -v</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o server main.go</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">FROM</span> centos:<span class="number">7.9</span>.<span class="number">2009</span> as runtime</span><br><span class="line"><span class="keyword">WORKDIR</span><span class="bash"> /</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> yum makecache</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> yum install iproute -y -q</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> yum clean all</span></span><br><span class="line"><span class="keyword">COPY</span><span class="bash"> --from=builder /workspace/server /server</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="bash"> [<span class="string">&quot;bash&quot;</span>, <span class="string">&quot;-c&quot;</span>, <span class="string">&quot;/server&quot;</span>]</span></span><br></pre></td></tr></table></figure>
+
+<p>执行 build</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ docker build -f Dockerfile -t zhaogaolong&#x2F;latency:v4 . --no-cache</span><br><span class="line">$ docker build -f Dockerfile -t zhaogaolong&#x2F;latency:v4-squash . --no-cache --squash</span><br><span class="line">$ docker image ls zhaogaolong&#x2F;latency |grep v4</span><br><span class="line">zhaogaolong&#x2F;latency   v4                  d9deb801e6c0        42 seconds ago      591MB</span><br><span class="line">zhaogaolong&#x2F;latency   v4-squash           7842e95f9b3f        4 minutes ago       238MB</span><br></pre></td></tr></table></figure>
+
+<p>发现 squash 的镜像比没有 squash 的镜像小一半，是什么原理呢？</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">➜  latency git:(describe) ✗ docker image <span class="built_in">history</span> zhaogaolong/latency:v4</span><br><span class="line">IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT</span><br><span class="line">d9deb801e6c0        2 minutes ago       /bin/sh -c <span class="comment">#(nop)  ENTRYPOINT [&quot;bash&quot; &quot;-c&quot; &quot;…   0B</span></span><br><span class="line">659a87a24dac        2 minutes ago       /bin/sh -c <span class="comment">#(nop) COPY file:c4a383448ad0c85d…   6.53MB</span></span><br><span class="line">879e2921709e        2 minutes ago       /bin/sh -c yum clean all                        24.1MB</span><br><span class="line">c825d62d6ade        2 minutes ago       /bin/sh -c yum install iproute -y -q            114MB</span><br><span class="line">e394bcbef3af        2 minutes ago       /bin/sh -c yum makecache                        243MB</span><br><span class="line">19199ba60f3d        3 minutes ago       /bin/sh -c <span class="comment">#(nop) WORKDIR /                     0B</span></span><br><span class="line">8652b9f0cb4c        5 months ago        /bin/sh -c <span class="comment">#(nop)  CMD [&quot;/bin/bash&quot;]            0B</span></span><br><span class="line">&lt;missing&gt;           5 months ago        /bin/sh -c <span class="comment">#(nop)  LABEL org.label-schema.sc…   0B</span></span><br><span class="line">&lt;missing&gt;           5 months ago        /bin/sh -c <span class="comment">#(nop) ADD file:b3ebbe8bd304723d4…   204MB</span></span><br><span class="line">➜  latency git:(describe) ✗ docker image <span class="built_in">history</span> zhaogaolong/latency:v4-squash</span><br><span class="line">IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT</span><br><span class="line">7842e95f9b3f        6 minutes ago                                                       34.2MB              merge sha256:1a5f39954399f2fa4929dd1849d324406641e462fb7495d1e1b5b426f929bbde to sha256:8652b9f0cb4c0599575e5a003f5906876e10c1ceb2ab9fe1786712dac14a50cf</span><br><span class="line">&lt;missing&gt;           6 minutes ago       /bin/sh -c <span class="comment">#(nop)  ENTRYPOINT [&quot;bash&quot; &quot;-c&quot; &quot;…   0B</span></span><br><span class="line">&lt;missing&gt;           6 minutes ago       /bin/sh -c <span class="comment">#(nop) COPY file:c4a383448ad0c85d…   0B</span></span><br><span class="line">&lt;missing&gt;           6 minutes ago       /bin/sh -c yum clean all                        0B</span><br><span class="line">&lt;missing&gt;           6 minutes ago       /bin/sh -c yum install iproute -y -q            0B</span><br><span class="line">&lt;missing&gt;           6 minutes ago       /bin/sh -c yum makecache                        0B</span><br><span class="line">&lt;missing&gt;           6 minutes ago       /bin/sh -c <span class="comment">#(nop) WORKDIR /                     0B</span></span><br><span class="line">&lt;missing&gt;           5 months ago        /bin/sh -c <span class="comment">#(nop)  CMD [&quot;/bin/bash&quot;]            0B</span></span><br><span class="line">&lt;missing&gt;           5 months ago        /bin/sh -c <span class="comment">#(nop)  LABEL org.label-schema.sc…   0B</span></span><br><span class="line">&lt;missing&gt;           5 months ago        /bin/sh -c <span class="comment">#(nop) ADD file:b3ebbe8bd304723d4…   204MB</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>惊奇的发现，自动会把这次的构建的 layer 全部 merge 成一个 layer。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="followme">
+  <span>Welcome to my other publishing channels</span>
+
+  <div class="social-list">
+
+      <div class="social-item">
+        <a target="_blank" class="social-link" href="https://twitter.com/zhaogaolong">
+          <span class="icon">
+            <i class="fab fa-twitter"></i>
+          </span>
+
+          <span class="label">Twitter</span>
+        </a>
+      </div>
+  </div>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/docker/" rel="tag"># docker</a>
+              <a href="/tags/kubernetes/" rel="tag"># kubernetes</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/03/21/volume-configmap/" rel="prev" title="【译】 在 kubernetes Pod 上挂在文件不删除已有的文件">
+                  <i class="fa fa-chevron-left"></i> 【译】 在 kubernetes Pod 上挂在文件不删除已有的文件
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zhaogaolong</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="Symbols count total">14k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">13 mins.</span>
+  </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
