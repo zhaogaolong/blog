@@ -2,7 +2,6 @@
 title: docker image 的瘦身
 date: 2021-04-25
 
-
 description: 如何瘦身 docker image
 tags:
   - docker
@@ -11,7 +10,6 @@ categories: docker
 ---
 
 随着容器化的不断普及，镜像作为容器的基础也是受到了指数型增长，之前有一段时间在搞 docker hub，对镜像瘦身有些许心得，分享给大家。
-
 
 # 现状
 
@@ -94,7 +92,7 @@ f1cb7c7d58b7        2 years ago         /bin/sh -c #(nop)  CMD ["/bin/bash"]    
 # 镜像瘦身三板斧
 
 1. 命令合并
-2. 产出转义
+2. 产出转移
 3. 合并数据
 
 ## 命令合并
