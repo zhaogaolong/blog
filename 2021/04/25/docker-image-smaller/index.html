@@ -31,7 +31,7 @@
 <meta property="og:description" content="如何瘦身 docker image">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2021-04-25T00:00:00.000Z">
-<meta property="article:modified_time" content="2021-04-28T12:08:25.052Z">
+<meta property="article:modified_time" content="2021-04-28T14:13:22.608Z">
 <meta property="article:author" content="Zhaogaolong">
 <meta property="article:tag" content="docker">
 <meta property="article:tag" content="kubernetes">
@@ -252,7 +252,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">Edited on</span>
-        <time title="Modified: 2021-04-28 12:08:25" itemprop="dateModified" datetime="2021-04-28T12:08:25+00:00">2021-04-28</time>
+        <time title="Modified: 2021-04-28 14:13:22" itemprop="dateModified" datetime="2021-04-28T14:13:22+00:00">2021-04-28</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -310,7 +310,7 @@
 </ol>
 <h1 id="镜像瘦身三板斧"><a href="#镜像瘦身三板斧" class="headerlink" title="镜像瘦身三板斧"></a>镜像瘦身三板斧</h1><ol>
 <li>命令合并</li>
-<li>产出转义</li>
+<li>产出转移</li>
 <li>合并数据</li>
 </ol>
 <h2 id="命令合并"><a href="#命令合并" class="headerlink" title="命令合并"></a>命令合并</h2><figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> centos:centos7.<span class="number">6.1810</span></span><br><span class="line"><span class="keyword">RUN</span><span class="bash"> yum makecache &amp;&amp; yum install vim net-tools dstat htop -y &amp;&amp; yum clean all</span></span><br></pre></td></tr></table></figure>
