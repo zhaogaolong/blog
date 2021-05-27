@@ -23,18 +23,22 @@
     var NexT = window.NexT || {};
     var CONFIG = {"hostname":"zhaogaolong.github.io","root":"/","images":"/images","scheme":"Muse","version":"8.2.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
   </script>
-<meta name="description" content="记录时间">
-<meta property="og:type" content="website">
-<meta property="og:title" content="赵高龙的学习笔记">
-<meta property="og:url" content="https://zhaogaolong.github.io/tags/%E9%93%BE%E8%A1%A8/index.html">
+<meta name="description" content="剖析 mysql count 是如何工作的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="剖析 mysql count">
+<meta property="og:url" content="https://zhaogaolong.github.io/2021/05/27/mysql-count/index.html">
 <meta property="og:site_name" content="赵高龙的学习笔记">
-<meta property="og:description" content="记录时间">
+<meta property="og:description" content="剖析 mysql count 是如何工作的">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-05-27T12:24:18.997Z">
+<meta property="article:modified_time" content="2021-05-27T12:24:18.997Z">
 <meta property="article:author" content="Zhaogaolong">
+<meta property="article:tag" content="数据库">
+<meta property="article:tag" content="mysql">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="https://zhaogaolong.github.io/tags/%E9%93%BE%E8%A1%A8/">
+<link rel="canonical" href="https://zhaogaolong.github.io/2021/05/27/mysql-count/">
 
 
 <script class="page-configurations">
@@ -42,11 +46,11 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'en'
   };
 </script>
-<title>Tag: 链表 | 赵高龙的学习笔记</title>
+<title>剖析 mysql count | 赵高龙的学习笔记</title>
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-WW01K6PG1G"></script>
     <script>
@@ -152,7 +156,7 @@
 
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           Table of Contents
@@ -165,6 +169,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#mysql-count-%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B%E4%B8%8E%E5%88%86%E6%9E%90"><span class="nav-number">1.</span> <span class="nav-text">mysql count 执行过程与分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8D%E5%90%8C-count-%E7%9A%84%E7%94%A8%E6%B3%95"><span class="nav-number">1.1.</span> <span class="nav-text">不同 count 的用法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#count-%E5%AD%97%E6%AE%B5"><span class="nav-number">1.1.1.</span> <span class="nav-text">count(字段)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#count-%E4%B8%BB%E9%94%AEid"><span class="nav-number">1.1.2.</span> <span class="nav-text">count(主键id)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#count-1"><span class="nav-number">1.1.3.</span> <span class="nav-text">count(1)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#count"><span class="nav-number">1.1.4.</span> <span class="nav-text">count(*)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA%EF%BC%9A"><span class="nav-number">1.2.</span> <span class="nav-text">结论：</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -230,50 +235,151 @@
 </noscript>
 
 
-    <div class="main-inner tag posts-collapse">
+    <div class="main-inner post posts-expand">
 
 
   
+
+
+<div class="post-block">
   
   
-  <div class="post-block">
-    <div class="post-content">
-      <div class="collection-title">
-        <h2 class="collection-header">链表
-          <small>Tag</small>
-        </h2>
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://zhaogaolong.github.io/2021/05/27/mysql-count/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+      <meta itemprop="name" content="Zhaogaolong">
+      <meta itemprop="description" content="记录时间">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="赵高龙的学习笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          剖析 mysql count
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-05-27 12:24:18" itemprop="dateCreated datePublished" datetime="2021-05-27T12:24:18+00:00">2021-05-27</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
+        </span>
+    </span>
+
+  
       </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="Symbols count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Symbols count in article: </span>
+      <span>812</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>1 mins.</span>
+    </span>
+</div>
 
-      
-    <div class="collection-year">
-      <span class="collection-header">2021</span>
+            <div class="post-description">剖析 mysql count 是如何工作的</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="mysql-count-执行过程与分析"><a href="#mysql-count-执行过程与分析" class="headerlink" title="mysql count 执行过程与分析"></a>mysql count 执行过程与分析</h1><p>全篇都是以 InnoDB 为前提</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">from</span> t;</span><br></pre></td></tr></table></figure>
+
+<p><strong>在保证逻辑正确的情况下，尽可能的扫描少的数据</strong><br>看一下搜索引擎做了那些优化</p>
+<ol>
+<li>索引优化<ul>
+<li>主键索引上是有数据的，而普通索引叶子节点数据是主键值，所以普通索引比主键索引小</li>
+<li>mysql 优化器就会选择数据量最小的普通索引树来遍历</li>
+</ul>
+</li>
+</ol>
+<h2 id="不同-count-的用法"><a href="#不同-count-的用法" class="headerlink" title="不同 count 的用法"></a>不同 count 的用法</h2><p>用法：</p>
+<ul>
+<li><code>count(字段)</code></li>
+<li><code>count(主键 id)</code></li>
+<li><code>count(*)</code></li>
+<li><code>count(1)</code></li>
+</ul>
+<h3 id="count-字段"><a href="#count-字段" class="headerlink" title="count(字段)"></a><code>count(字段)</code></h3><ol>
+<li>如果这个<code>字段</code> 定义为 <code>not null</code>的话，一行一行的数据读出这个<code>字段</code>, 判断不为 <code>null</code>的进行累加。</li>
+<li>如果这个<code>字段</code> 定义允许为 <code>null</code>的话, 执行的时候判断有可能是 <code>null</code>的, 把值取出来判断一下，不为 null 的才累加。</li>
+</ol>
+<p>原则： server 层要什么字段，InnoDB 就返回什么字段。</p>
+<h3 id="count-主键id"><a href="#count-主键id" class="headerlink" title="count(主键id)"></a><code>count(主键id)</code></h3><ol>
+<li>InnoDB 引擎会遍历整张表，把每一行的 ID 值取出来，返回给 server 层</li>
+<li>server 层拿到数据不为空的，就按行累加</li>
+</ol>
+<h3 id="count-1"><a href="#count-1" class="headerlink" title="count(1)"></a><code>count(1)</code></h3><ol>
+<li>InnoDB 引擎会遍历整张表，但不取值。</li>
+<li>server 层对于取出来的每一行，放一个数字 <code>1</code> 进去， 判断不可能为空的，按行累加</li>
+</ol>
+<p>但看 <code>count(主键id)</code> 和 <code>count(1)</code>的用法差别的话，能对比出来， count(1) 性能比 count(主键 id) 效率要高，因为引擎返回 id 会涉及解析数据行，以及拷贝字段值的操作。</p>
+<h3 id="count"><a href="#count" class="headerlink" title="count(*)"></a><code>count(*)</code></h3><ol>
+<li>并不会把全字段取出来，而是做了单独的优化。</li>
+<li><code>count(*)</code> 肯定不为 null ，按行累加。</li>
+</ol>
+<p>看到这里肯定有疑问，优化器不会判断一下吗， 主键 id 肯定不为空，直接转换成 <code>count(*)</code> 不就好了，多简单的优化。</p>
+<p>当然 mysql 针对这个语句优化也不是不可以，但是需要专门优化的情况太多，而且 mysql 已经优化过了<code>count(*)</code>， 你可以直接用<code>count(*)</code>。</p>
+<h2 id="结论："><a href="#结论：" class="headerlink" title="结论："></a>结论：</h2><p>按照效率由低到高： <code>count(字段)</code> &lt; <code>count(主键id)</code> &lt; <code>count(1)</code> ~= <code>count(*)</code></p>
+
     </div>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-      <div class="post-meta-container">
-        <time itemprop="dateCreated"
-              datetime="2021-04-26T00:00:00+00:00"
-              content="2021-04-26">
-          04-26
-        </time>
-      </div>
+    
+    
+    
 
-      <div class="post-title">
-          <a class="post-title-link" href="/2021/04/26/%E8%A2%AB%E6%BB%B4%E6%BB%B4%E5%B0%8F%E5%A7%90%E5%A7%90%E6%91%81%E5%9C%A8%E5%9C%B0%E4%B8%8A%E6%91%A9%E6%93%A6/" itemprop="url">
-            <span itemprop="name">被滴滴小姐姐摁在地上摩擦</span>
-          </a>
-      </div>
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag"># 数据库</a>
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
 
-      
-    </header>
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/05/27/mysql-order-by/" rel="prev" title="剖析 mysql order by">
+                  <i class="fa fa-chevron-left"></i> 剖析 mysql order by
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
   </article>
+</div>
 
-    </div>
-  </div>
-  
-  
-  
+
+
+
+
 
 
 <script>

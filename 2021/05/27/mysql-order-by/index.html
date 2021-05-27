@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"zhaogaolong.github.io","root":"/","images":"/images","scheme":"Muse","version":"8.2.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+<meta name="description" content="剖析 mysql order by 是如何工作的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="剖析 mysql order by">
+<meta property="og:url" content="https://zhaogaolong.github.io/2021/05/27/mysql-order-by/index.html">
+<meta property="og:site_name" content="赵高龙的学习笔记">
+<meta property="og:description" content="剖析 mysql order by 是如何工作的">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/zhaogaolong/PicGo/master/20210524194904.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/zhaogaolong/PicGo/master/20210524201741.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/zhaogaolong/PicGo/master/20210524205116.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/zhaogaolong/PicGo/master/20210527193416.png">
+<meta property="article:published_time" content="2021-05-27T12:24:18.997Z">
+<meta property="article:modified_time" content="2021-05-27T12:24:18.997Z">
+<meta property="article:author" content="Zhaogaolong">
+<meta property="article:tag" content="数据库">
+<meta property="article:tag" content="mysql">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/zhaogaolong/PicGo/master/20210524194904.png">
+
+
+<link rel="canonical" href="https://zhaogaolong.github.io/2021/05/27/mysql-order-by/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+<title>剖析 mysql order by | 赵高龙的学习笔记</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WW01K6PG1G"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-WW01K6PG1G');
+      }
+    </script>
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">赵高龙的学习笔记</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home"><a href="/" rel="section">Home</a></li>
+        <li class="menu-item menu-item-docker"><a href="/categories/docker/" rel="section">docker</a></li>
+        <li class="menu-item menu-item-kubernetes"><a href="/categories/kubernetes" rel="section">kubernetes</a></li>
+        <li class="menu-item menu-item-about"><a href="/about/" rel="section">About</a></li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%96%E6%9E%90-mysql-order-by-%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">剖析 mysql order by 工作流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A8%E5%AD%97%E6%AE%B5%E6%8E%92%E5%BA%8F"><span class="nav-number">2.</span> <span class="nav-text">全字段排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#rowid-%E6%8E%92%E5%BA%8F"><span class="nav-number">3.</span> <span class="nav-text">rowid 排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A8%E5%AD%97%E6%AE%B5%E6%8E%92%E5%BA%8F-VS-rowid-%E6%8E%92%E5%BA%8F"><span class="nav-number">4.</span> <span class="nav-text">全字段排序 VS rowid 排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#order-by-%E4%B8%8D%E4%B8%80%E5%AE%9A%E7%9C%9F%E7%9A%84%E6%89%A7%E8%A1%8C%E6%8E%92%E5%BA%8F"><span class="nav-number">5.</span> <span class="nav-text">order by 不一定真的执行排序</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%99%AE%E9%80%9A%E7%B4%A2%E5%BC%95"><span class="nav-number">5.1.</span> <span class="nav-text">普通索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A6%86%E7%9B%96%E7%B4%A2%E5%BC%95"><span class="nav-number">5.2.</span> <span class="nav-text">覆盖索引</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.3.</span> <span class="nav-text">总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#reference"><span class="nav-number">6.</span> <span class="nav-text">reference</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zhaogaolong"
+      src="/uploads/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Zhaogaolong</p>
+  <div class="site-description" itemprop="description">记录时间</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">categories</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author site-overview-item animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhaogaolong" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhaogaolong" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zgaolong@gmail.com" title="E-Mail → mailto:zgaolong@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/zhaogaolong" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;zhaogaolong" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+  <a href="https://github.com/zhaogaolong" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://zhaogaolong.github.io/2021/05/27/mysql-order-by/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.jpg">
+      <meta itemprop="name" content="Zhaogaolong">
+      <meta itemprop="description" content="记录时间">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="赵高龙的学习笔记">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          剖析 mysql order by
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-05-27 12:24:18" itemprop="dateCreated datePublished" datetime="2021-05-27T12:24:18+00:00">2021-05-27</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
+        </span>
+    </span>
+
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="Symbols count in article">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">Symbols count in article: </span>
+      <span>3.1k</span>
+    </span>
+    <span class="post-meta-item" title="Reading time">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">Reading time &asymp;</span>
+      <span>3 mins.</span>
+    </span>
+</div>
+
+            <div class="post-description">剖析 mysql order by 是如何工作的</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="剖析-mysql-order-by-工作流程"><a href="#剖析-mysql-order-by-工作流程" class="headerlink" title="剖析 mysql order by 工作流程"></a>剖析 mysql order by 工作流程</h2><p>实际开发中总是有 mysql 的 order by 的排序需求，开始 剖析 order by 的工作流程</p>
+<p>假设 user 表 schema:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- user table schema</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `<span class="keyword">user</span>` (</span><br><span class="line">  `id` <span class="type">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `city` <span class="type">varchar</span>(<span class="number">16</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `name` <span class="type">varchar</span>(<span class="number">16</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `age` <span class="type">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  `addr` <span class="type">varchar</span>(<span class="number">128</span>) <span class="keyword">DEFAULT</span> <span class="keyword">NULL</span>,</span><br><span class="line">  <span class="keyword">PRIMARY</span> KEY (`id`),</span><br><span class="line">  KEY `city` (`city`)</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB;</span><br></pre></td></tr></table></figure>
+
+<p>从个 sql 开始</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> name, age, addr <span class="keyword">from</span> <span class="keyword">user</span> <span class="keyword">where</span> city<span class="operator">=</span>&quot;杭州&quot; <span class="keyword">order</span> <span class="keyword">by</span> name limit <span class="number">1000</span>;</span><br></pre></td></tr></table></figure>
+
+<h2 id="全字段排序"><a href="#全字段排序" class="headerlink" title="全字段排序"></a>全字段排序</h2><p>用 explain 看一下语句执行情况<br><img src="https://raw.githubusercontent.com/zhaogaolong/PicGo/master/20210524194904.png" alt="图1"></p>
+<p>Extra 字段中的 “Using filesort” 表示需要排序， Mysql 为每个线程分配一块用于 sort 的空间，成为 sort_buffer。</p>
+<p>通常的语句执行流程：</p>
+<ol>
+<li>初始化 sort buffer， 放入 name, age, addr 三个字段。</li>
+<li>从索引 city，找到第一个满足 city=”杭州” 的主键 id。</li>
+<li>从主键 id 去出整行， 取出 name, age, addr 三个字段值，放入 sort buffer 里。</li>
+<li>从 city 取出下一个主键 id</li>
+<li>循环 3, 4 步骤，知道 city != “杭州”为止。</li>
+<li>sort buffer 中的数据按照字段 name 做快速排序</li>
+<li>按照排序结果取出前 1000 行返回</li>
+</ol>
+<p>过程图：<br><img src="https://raw.githubusercontent.com/zhaogaolong/PicGo/master/20210524201741.png"></p>
+<p>图中的 name 排序这个动作有可能在<strong>内存</strong> 或 <strong>文件</strong> 中完成的。这个取决于排序内存所需的参数配置：<code>sort_buffer_size</code>。<br>排序的数据如果小于 <code>sort_buffer_size</code> 就在内存完成，反之就不得不利用磁盘临时文件辅助排序了。</p>
+<p>验证</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/* 打开optimizer_trace，只对本线程有效 */</span></span><br><span class="line"><span class="keyword">SET</span> optimizer_trace<span class="operator">=</span><span class="string">&#x27;enabled=on&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* @a保存Innodb_rows_read的初始值 */</span></span><br><span class="line"><span class="keyword">select</span> VARIABLE_VALUE <span class="keyword">into</span> <span class="variable">@a</span> <span class="keyword">from</span>  performance_schema.session_status <span class="keyword">where</span> variable_name <span class="operator">=</span> <span class="string">&#x27;Innodb_rows_read&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 执行语句 */</span></span><br><span class="line"><span class="keyword">select</span> city, name,age <span class="keyword">from</span> t <span class="keyword">where</span> city<span class="operator">=</span><span class="string">&#x27;杭州&#x27;</span> <span class="keyword">order</span> <span class="keyword">by</span> name limit <span class="number">1000</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 查看 OPTIMIZER_TRACE 输出 */</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> `information_schema`.`OPTIMIZER_TRACE`\G</span><br><span class="line"></span><br><span class="line"><span class="comment">/* @b保存Innodb_rows_read的当前值 */</span></span><br><span class="line"><span class="keyword">select</span> VARIABLE_VALUE <span class="keyword">into</span> <span class="variable">@b</span> <span class="keyword">from</span> performance_schema.session_status <span class="keyword">where</span> variable_name <span class="operator">=</span> <span class="string">&#x27;Innodb_rows_read&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 计算Innodb_rows_read差值 */</span></span><br><span class="line"><span class="keyword">select</span> <span class="variable">@b</span><span class="operator">-</span><span class="variable">@a</span>;</span><br></pre></td></tr></table></figure>
+
+<p>通过查看 <code>optimizer_trace</code> 查看 <code>num_of_tmp_files</code> 查看结果<br><img src="https://raw.githubusercontent.com/zhaogaolong/PicGo/master/20210524205116.png"></p>
+<p><code>num_of_tmp_files</code> 表示排序过程需要多少个临时文件。如果内存放不下，就需要使用外部排序，一般使用归并排序。</p>
+<p>如果 <code>sort_buffer_size</code> 空间越小，则使用 <code>num_of_tmp_files</code> (临时文件)数量越多。</p>
+<h2 id="rowid-排序"><a href="#rowid-排序" class="headerlink" title="rowid 排序"></a>rowid 排序</h2><p>上面的例子是从原表里读取一遍，剩下就在 sort buffer 里操作了，如果查询的字段很多，但内存里存放数据很少，就面临着使用多个临时文件，从而造成排序性能下降。</p>
+<p><strong>如果 mysql 认为单行长度过大会怎么做?</strong></p>
+<p>修改一个参数</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SET</span> max_length_for_sort_data <span class="operator">=</span> <span class="number">16</span>; <span class="comment">-- default 1024</span></span><br></pre></td></tr></table></figure>
+
+<p><code>max_length_for_sort_data</code>是设置排序字段想加的总长度</p>
+<p>回到查询语句，city, name, age 三个字段的定义总长度是 36， 超过了 <code>max_length_for_sort_data</code> 设置的 16， 算法过程出现了什么变化。</p>
+<p>新的算法放入 sort_buffer 只有排序的列（name） 和主键 id，但排好序就缺少了 city 和 age 字段，不能直接返回，这个执行流程就需要回一次表完成。<br>步骤：</p>
+<ol>
+<li>初始化 sort_buffer， 放入两个字段，name 和 id</li>
+<li>从 索引 city 上找到所有 <code>city=&quot;杭州&quot;</code> 的主键 id</li>
+<li>从主键 id 中找到 name、id 两个字段放入 sort_buffer 里</li>
+<li>从索引 city 取出下一个主键 id，</li>
+<li>反复 3，4 步骤，直到 <code>city != &quot;杭州&quot;</code> 为止</li>
+<li>对 sort_buffer 里的数据按照 name 进行排序</li>
+<li>遍历所有的结果，取出前 1000 行，并按照 id 回到原表中取出 city, name, age 字段返回给客户端.</li>
+</ol>
+<p>首先 examined_rows 还是 4000， 但是 <code>select @b-@a</code> 语句值变成了 5000 了，为啥捏？这是因为最后（第七步）有一次 1000 个数据需要回表查询。</p>
+<p><img src="https://raw.githubusercontent.com/zhaogaolong/PicGo/master/20210527193416.png"></p>
+<ul>
+<li><code>sort_mode</code> 变成了 <code>sort_key, rowid</code>, 表示参与排序的只有 name 和 id 两个字段</li>
+<li>number_of_tmp_files 变成了 10， 是因为 4000 行的数据每一行都变小了，临时文件也变小了</li>
+</ul>
+<h2 id="全字段排序-VS-rowid-排序"><a href="#全字段排序-VS-rowid-排序" class="headerlink" title="全字段排序 VS rowid 排序"></a>全字段排序 VS rowid 排序</h2><ul>
+<li>mysql 担心排序内存小，会影响到效率，退化为 rowid 排序，这个需要回到原多表查询一次</li>
+<li>如果内存足够大，直接在内存里完成</li>
+<li>多使用内存，尽量少访问磁盘</li>
+<li>innoDB 表，rowid 排序需要回表，就造成多访问磁盘几次（索引里都是 xx，有可能在内存，有可能在磁盘上）,因此不被优先选择</li>
+</ul>
+<h2 id="order-by-不一定真的执行排序"><a href="#order-by-不一定真的执行排序" class="headerlink" title="order by 不一定真的执行排序"></a>order by 不一定真的执行排序</h2><h3 id="普通索引"><a href="#普通索引" class="headerlink" title="普通索引"></a>普通索引</h3><p>如果索引上天然取出的 name 就是排好序的，<strong>那么数据就不需要排序了</strong></p>
+<p>添加二级索引</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> t <span class="keyword">add</span> index city_user(city, name);</span><br></pre></td></tr></table></figure>
+
+<p>就使用索引的最左原则，name 就是排好序的了。<br>大概过程：</p>
+<ol>
+<li>从索引（city，name）中取出满足 <code>city=&quot;杭州&quot;</code>条件的主键 id。</li>
+<li>从主键 id 中取出整行数据，取出 name、city、age 三个字段，返回</li>
+<li>从索引（city，name）取出下一个记录的主键 id</li>
+<li>反复 2、3 操作，直到查到第 1000 条记录，或者不满足 city=”杭州” 的条件</li>
+</ol>
+<p>总结：整个过程不需要排序动作，只需要扫描 1000 行就够了。</p>
+<h3 id="覆盖索引"><a href="#覆盖索引" class="headerlink" title="覆盖索引"></a>覆盖索引</h3><p>如果普通二级索引上就有 name, city, age 三个字段了，那么就不需要回表查询了，直接在这个覆盖索引上完成数据查找并返回，效率更高</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> <span class="keyword">table</span> t <span class="keyword">add</span> index city_user_age(city, name, age);</span><br></pre></td></tr></table></figure>
+
+<p>执行过程：</p>
+<ol>
+<li>从索引(city, name, age) 中找到第一个 满足 city=”杭州” 的条件记录， 取出 city, name, age 三个字段的值，作为结果集的一部分返回</li>
+<li>从索引(city, name, age) 取下一条记录， 同样取出三个字段，直接返回。</li>
+<li>重复 2 步骤，直到查到 1000 条记录，或不满足 city=”杭州” 的条件结束循环。</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>分析了排序的不同条件使用不同的排序算法。<br>从效率排序：覆盖索引 &gt; 二级索引 &gt; 全字段排序 &gt; rowid 排序</p>
+<h2 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/73479">https://time.geekbang.org/column/article/73479</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag"># 数据库</a>
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/04/26/%E8%A2%AB%E6%BB%B4%E6%BB%B4%E5%B0%8F%E5%A7%90%E5%A7%90%E6%91%81%E5%9C%A8%E5%9C%B0%E4%B8%8A%E6%91%A9%E6%93%A6/" rel="prev" title="被滴滴小姐姐摁在地上摩擦">
+                  <i class="fa fa-chevron-left"></i> 被滴滴小姐姐摁在地上摩擦
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/05/27/mysql-count/" rel="next" title="剖析 mysql count">
+                  剖析 mysql count <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zhaogaolong</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="Symbols count total">20k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">18 mins.</span>
+  </span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/schemes/muse.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
