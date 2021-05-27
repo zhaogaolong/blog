@@ -2,14 +2,11 @@
 title: 【译】 在 kubernetes Pod 上挂在文件不删除已有的文件
 date: 2021-03-21
 tags:
-- kubernetes
-- configmap
+  - kubernetes
+  - configmap
 
 categories: kubernetes
-
 ---
-
-
 
 > 原文 https://medium.com/hackernoon/mount-file-to-kubernetes-pod-without-deleting-the-existing-file-in-the-docker-container-in-the-88b5d11661a6
 
@@ -292,4 +289,3 @@ spec:
 引用：
 
 - https://blog.sebastian-daschner.com/entries/multiple-kubernetes-volumes-directory
-
