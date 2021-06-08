@@ -23,22 +23,22 @@
     var NexT = window.NexT || {};
     var CONFIG = {"hostname":"zhaogaolong.github.io","root":"/","images":"/images","scheme":"Muse","version":"8.2.2","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
   </script>
-<meta name="description" content="剖析 mysql count 是如何工作的">
+<meta name="description" content="go 下载依赖在 https 不满足的情况下使用 ssh 方式解决。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="剖析 mysql count">
-<meta property="og:url" content="https://zhaogaolong.github.io/2021/05/27/mysql-count/index.html">
+<meta property="og:title" content="go mod use ssh">
+<meta property="og:url" content="https://zhaogaolong.github.io/2021/06/08/go-mod-use-ssh/index.html">
 <meta property="og:site_name" content="赵高龙的学习笔记">
-<meta property="og:description" content="剖析 mysql count 是如何工作的">
+<meta property="og:description" content="go 下载依赖在 https 不满足的情况下使用 ssh 方式解决。">
 <meta property="og:locale" content="en_US">
-<meta property="article:published_time" content="2021-05-27T12:24:18.997Z">
-<meta property="article:modified_time" content="2021-05-27T12:24:18.997Z">
+<meta property="article:published_time" content="2021-06-08T00:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-08T12:49:00.874Z">
 <meta property="article:author" content="Zhaogaolong">
-<meta property="article:tag" content="数据库">
-<meta property="article:tag" content="mysql">
+<meta property="article:tag" content="golang">
+<meta property="article:tag" content="tips">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="https://zhaogaolong.github.io/2021/05/27/mysql-count/">
+<link rel="canonical" href="https://zhaogaolong.github.io/2021/06/08/go-mod-use-ssh/">
 
 
 <script class="page-configurations">
@@ -50,7 +50,7 @@
     lang   : 'en'
   };
 </script>
-<title>剖析 mysql count | 赵高龙的学习笔记</title>
+<title>go mod use ssh | 赵高龙的学习笔记</title>
   
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-WW01K6PG1G"></script>
     <script>
@@ -138,6 +138,7 @@
         <li class="menu-item menu-item-home"><a href="/" rel="section">Home</a></li>
         <li class="menu-item menu-item-docker"><a href="/categories/docker/" rel="section">docker</a></li>
         <li class="menu-item menu-item-kubernetes"><a href="/categories/kubernetes" rel="section">kubernetes</a></li>
+        <li class="menu-item menu-item-tags"><a href="/tags/" rel="section">Tags</a></li>
         <li class="menu-item menu-item-about"><a href="/about/" rel="section">About</a></li>
   </ul>
 </nav>
@@ -169,7 +170,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#mysql-count-%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B%E4%B8%8E%E5%88%86%E6%9E%90"><span class="nav-number">1.</span> <span class="nav-text">mysql count 执行过程与分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8D%E5%90%8C-count-%E7%9A%84%E7%94%A8%E6%B3%95"><span class="nav-number">1.1.</span> <span class="nav-text">不同 count 的用法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#count-%E5%AD%97%E6%AE%B5"><span class="nav-number">1.1.1.</span> <span class="nav-text">count(字段)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#count-%E4%B8%BB%E9%94%AEid"><span class="nav-number">1.1.2.</span> <span class="nav-text">count(主键id)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#count-1"><span class="nav-number">1.1.3.</span> <span class="nav-text">count(1)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#count"><span class="nav-number">1.1.4.</span> <span class="nav-text">count(*)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA%EF%BC%9A"><span class="nav-number">1.2.</span> <span class="nav-text">结论：</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#go-mod-use-ssh"><span class="nav-number">1.</span> <span class="nav-text">go mod use ssh</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90"><span class="nav-number">1.2.</span> <span class="nav-text">问题分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B9%E6%A1%88%E6%AD%A5%E9%AA%A4"><span class="nav-number">1.3.</span> <span class="nav-text">方案步骤</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">1.4.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -184,17 +185,19 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
           <a href="/archives">
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">6</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">categories</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">7</span>
-        <span class="site-state-item-name">tags</span>
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
 </div>
@@ -246,7 +249,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
-    <link itemprop="mainEntityOfPage" href="https://zhaogaolong.github.io/2021/05/27/mysql-count/">
+    <link itemprop="mainEntityOfPage" href="https://zhaogaolong.github.io/2021/06/08/go-mod-use-ssh/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/uploads/avatar.jpg">
@@ -259,7 +262,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          剖析 mysql count
+          go mod use ssh
         </h1>
 
         <div class="post-meta-container">
@@ -269,8 +272,9 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">Posted on</span>
+      
 
-      <time title="Created: 2021-05-27 12:24:18" itemprop="dateCreated datePublished" datetime="2021-05-27T12:24:18+00:00">2021-05-27</time>
+      <time title="Created: 2021-06-08 00:00:00 / Modified: 12:49:00" itemprop="dateCreated datePublished" datetime="2021-06-08T00:00:00+00:00">2021-06-08</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -278,7 +282,7 @@
       </span>
       <span class="post-meta-item-text">In</span>
         <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
+          <a href="/categories/golang/" itemprop="url" rel="index"><span itemprop="name">golang</span></a>
         </span>
     </span>
 
@@ -290,7 +294,7 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">Symbols count in article: </span>
-      <span>812</span>
+      <span>1.2k</span>
     </span>
     <span class="post-meta-item" title="Reading time">
       <span class="post-meta-item-icon">
@@ -301,7 +305,7 @@
     </span>
 </div>
 
-            <div class="post-description">剖析 mysql count 是如何工作的</div>
+            <div class="post-description">go 下载依赖在 https 不满足的情况下使用 ssh 方式解决。</div>
         </div>
       </header>
 
@@ -309,45 +313,71 @@
     
     
     <div class="post-body" itemprop="articleBody">
-        <h1 id="mysql-count-执行过程与分析"><a href="#mysql-count-执行过程与分析" class="headerlink" title="mysql count 执行过程与分析"></a>mysql count 执行过程与分析</h1><p>全篇都是以 InnoDB 为前提</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="built_in">count</span>(<span class="operator">*</span>) <span class="keyword">from</span> t;</span><br></pre></td></tr></table></figure>
+        <h1 id="go-mod-use-ssh"><a href="#go-mod-use-ssh" class="headerlink" title="go mod use ssh"></a>go mod use ssh</h1><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>最近在做一个权限管理的模块，基于 kubernetes， 使用 kubernetes crd 进行存储，最终渲染成 <a target="_blank" rel="noopener" href="https://istio.io/latest/docs/reference/config/security/authorization-policy/">authorization-policy</a> 实现 mesh 的资源访问控制</p>
+<p>代码托管是第三方的 git 代码管理服务，只能通过 http 或 ssh 下载和上传代码。因外部环境和政策的问题（fuck），没法使用协议默认的端口, http 使用 80, ssh 使用 23 端口。在 go get crd 的时候就出现访问 https 的问题，一直无法成功下载依赖，断断续续搞了好几天才搞定。最终小伙伴 <a target="_blank" rel="noopener" href="https://juejin.cn/user/729731453420792/posts">华大猫</a> 找到了解决方案，彻底解决了这个问题。</p>
+<h2 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h2><ol>
+<li>go get 只支持 ssh 和 https 这种安全的方式下载依赖代码，</li>
+<li>默认 go get 时候使用 https 的 query 查找接口，因为没有我们的代码托管服务并没有提供基于 https 查询接口</li>
+<li>最终只能全链路使用 ssh 的方式进行 query 和 download</li>
+</ol>
+<p>环境介绍：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>版本</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>go version</td>
+<td>1.15</td>
+<td></td>
+</tr>
+<tr>
+<td>git repo</td>
+<td>projectA, projectB</td>
+<td>projectA 依赖 projectB</td>
+</tr>
+<tr>
+<td>Git server 服务器端口</td>
+<td>23</td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="方案步骤"><a href="#方案步骤" class="headerlink" title="方案步骤"></a>方案步骤</h2><ol>
+<li> projectB 的 go.mod 增加 .git 后缀， 下面是 projectB 的 <code>go.mod</code></li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">module GIT_SERVER/zhaogaolong/projectB.git  // 添加 .git 后缀</span><br><span class="line"></span><br><span class="line">go 1.15</span><br><span class="line"></span><br><span class="line">require (</span><br><span class="line">	github.com/go-logr/logr v0.2.0</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
 
-<p><strong>在保证逻辑正确的情况下，尽可能的扫描少的数据</strong><br>看一下搜索引擎做了那些优化</p>
+<ol start="2">
+<li>import 时候增加 .git 后缀</li>
+</ol>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> crdv1 <span class="string">&quot;GIT_SERVER/zhaogaolong/projectB.git&quot;</span>  <span class="comment">// projectA import projectB</span></span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>ssh config 配置主机默认端口</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ cat .ssh/config</span><br><span class="line">Host GIT_SERVER</span><br><span class="line">  User zhaogaolong</span><br><span class="line">  Port 23</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>.gitconfig 增加 insteadOf 配置，将 https 替换成 ssh</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ cat projectA/.gitconfig</span><br><span class="line">[url <span class="string">&quot;ssh://zhaogaolong@GIT_SERVER/&quot;</span>]</span><br><span class="line">    insteadOf = https://GIT_SERVER/</span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>配置 go env GOPRIVATE</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ go env -w GOPRIVATE=GIT_SERVER</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>go mod 时候会经历几个阶段</p>
 <ol>
-<li>索引优化<ul>
-<li>主键索引上是有数据的，而普通索引叶子节点数据是主键值，所以普通索引比主键索引小</li>
-<li>mysql 优化器就会选择数据量最小的普通索引树来遍历</li>
-</ul>
-</li>
+<li>query 依赖的软件包中的 go.mod 中的 <code>module</code> 和 import 名称是否一致</li>
+<li>Download 依赖包</li>
+<li>查询 依赖包的 tag，这里使用 git ls-remote 查询依赖包的 tag 信息</li>
+<li>把版本信息写到 go.mod 文件里</li>
 </ol>
-<h2 id="不同-count-的用法"><a href="#不同-count-的用法" class="headerlink" title="不同 count 的用法"></a>不同 count 的用法</h2><p>用法：</p>
-<ul>
-<li><code>count(字段)</code></li>
-<li><code>count(主键 id)</code></li>
-<li><code>count(*)</code></li>
-<li><code>count(1)</code></li>
-</ul>
-<h3 id="count-字段"><a href="#count-字段" class="headerlink" title="count(字段)"></a><code>count(字段)</code></h3><ol>
-<li>如果这个<code>字段</code> 定义为 <code>not null</code>的话，一行一行的数据读出这个<code>字段</code>, 判断不为 <code>null</code>的进行累加。</li>
-<li>如果这个<code>字段</code> 定义允许为 <code>null</code>的话, 执行的时候判断有可能是 <code>null</code>的, 把值取出来判断一下，不为 null 的才累加。</li>
-</ol>
-<p>原则： server 层要什么字段，InnoDB 就返回什么字段。</p>
-<h3 id="count-主键id"><a href="#count-主键id" class="headerlink" title="count(主键id)"></a><code>count(主键id)</code></h3><ol>
-<li>InnoDB 引擎会遍历整张表，把每一行的 ID 值取出来，返回给 server 层</li>
-<li>server 层拿到数据不为空的，就按行累加</li>
-</ol>
-<h3 id="count-1"><a href="#count-1" class="headerlink" title="count(1)"></a><code>count(1)</code></h3><ol>
-<li>InnoDB 引擎会遍历整张表，但不取值。</li>
-<li>server 层对于取出来的每一行，放一个数字 <code>1</code> 进去， 判断不可能为空的，按行累加</li>
-</ol>
-<p>但看 <code>count(主键id)</code> 和 <code>count(1)</code>的用法差别的话，能对比出来， count(1) 性能比 count(主键 id) 效率要高，因为引擎返回 id 会涉及解析数据行，以及拷贝字段值的操作。</p>
-<h3 id="count"><a href="#count" class="headerlink" title="count(*)"></a><code>count(*)</code></h3><ol>
-<li>并不会把全字段取出来，而是做了单独的优化。</li>
-<li><code>count(*)</code> 肯定不为 null ，按行累加。</li>
-</ol>
-<p>看到这里肯定有疑问，优化器不会判断一下吗， 主键 id 肯定不为空，直接转换成 <code>count(*)</code> 不就好了，多简单的优化。</p>
-<p>当然 mysql 针对这个语句优化也不是不可以，但是需要专门优化的情况太多，而且 mysql 已经优化过了<code>count(*)</code>， 你可以直接用<code>count(*)</code>。</p>
-<h2 id="结论："><a href="#结论：" class="headerlink" title="结论："></a>结论：</h2><p>按照效率由低到高： <code>count(字段)</code> &lt; <code>count(主键id)</code> &lt; <code>count(1)</code> ~= <code>count(*)</code></p>
+<p>问题是解决了，但也留下了一点后遗症，projectB 的代码开发 import 的时候全部需要加上 .git 后缀，很恶心，尝试使用 <code>go mod replace</code> 解决，最终是以失败而告终。如果有更优雅的解决方案，<a target="_blank" rel="noopener" href="https://github.com/zhaogaolong/zhaogaolong.github.io/issues">欢迎留言</a></p>
 
     </div>
 
@@ -357,19 +387,22 @@
 
     <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag"># 数据库</a>
-              <a href="/tags/mysql/" rel="tag"># mysql</a>
+              <a href="/tags/golang/" rel="tag"># golang</a>
+              <a href="/tags/tips/" rel="tag"># tips</a>
           </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2021/05/27/mysql-order-by/" rel="prev" title="剖析 mysql order by">
-                  <i class="fa fa-chevron-left"></i> 剖析 mysql order by
+                <a href="/2021/04/26/%E8%A2%AB%E6%BB%B4%E6%BB%B4%E5%B0%8F%E5%A7%90%E5%A7%90%E6%91%81%E5%9C%A8%E5%9C%B0%E4%B8%8A%E6%91%A9%E6%93%A6/" rel="prev" title="被滴滴小姐姐摁在地上摩擦">
+                  <i class="fa fa-chevron-left"></i> 被滴滴小姐姐摁在地上摩擦
                 </a>
             </div>
             <div class="post-nav-item">
+                <a href="/2021/06/08/mysql-order-by/" rel="next" title="剖析 mysql order by">
+                  剖析 mysql order by <i class="fa fa-chevron-right"></i>
+                </a>
             </div>
           </div>
     </footer>
@@ -423,13 +456,13 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-line"></i>
     </span>
-    <span title="Symbols count total">20k</span>
+    <span title="Symbols count total">21k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">18 mins.</span>
+    <span title="Reading time total">19 mins.</span>
   </span>
 </div>
   <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
