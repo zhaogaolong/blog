@@ -1,7 +1,6 @@
 ---
 title: docker image 的瘦身
 date: 2021-04-25
-
 description: 如何瘦身 docker image
 tags:
   - docker
